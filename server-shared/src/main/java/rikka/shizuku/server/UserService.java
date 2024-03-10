@@ -15,6 +15,11 @@ import androidx.annotation.Nullable;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Queue;
 
 import dev.rikka.tools.refine.Refine;
 
@@ -67,8 +72,21 @@ public class UserService {
             Context context = Refine.<ContextHidden>unsafeCast(systemContext).createPackageContextAsUser(pkg, Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY, userHandle);
             File dirInfo = new File(context.getApplicationInfo().nativeLibraryDir);
             File[] libPaths = dirInfo.listFiles();
-            for (File libPath : libPaths) {
-                System.load(libPath.getAbsolutePath());
+            Queue<File> notLoadedLibs = new ArrayDeque<>(Arrays.asList(libPaths));
+            int failuresAllowed = notLoadedLibs.size() * 4;
+            while (!notLoadedLibs.isEmpty()) {
+                File libPath = notLoadedLibs.remove();
+                try {
+                    System.load(libPath.getAbsolutePath());
+                }
+                catch (UnsatisfiedLinkError error) {
+                    notLoadedLibs.add(libPath);
+                    failuresAllowed--;
+                }
+
+                if (failuresAllowed <= 0) {
+                    break;
+                }
             }
             ClassLoader classLoader = context.getClassLoader();
             Thread.currentThread().setContextClassLoader(classLoader);
