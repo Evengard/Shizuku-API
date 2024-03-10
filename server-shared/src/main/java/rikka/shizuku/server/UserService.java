@@ -13,6 +13,7 @@ import android.util.Pair;
 
 import androidx.annotation.Nullable;
 
+import java.io.File;
 import java.lang.reflect.Constructor;
 
 import dev.rikka.tools.refine.Refine;
@@ -64,6 +65,11 @@ public class UserService {
                             ? UserHandleHidden.of(userId)
                             : new UserHandleHidden(userId));
             Context context = Refine.<ContextHidden>unsafeCast(systemContext).createPackageContextAsUser(pkg, Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY, userHandle);
+            File dirInfo = new File(context.getApplicationInfo().nativeLibraryDir);
+            File[] libPaths = dirInfo.listFiles();
+            for (File libPath : libPaths) {
+                System.load(libPath.getAbsolutePath());
+            }
             ClassLoader classLoader = context.getClassLoader();
             Thread.currentThread().setContextClassLoader(classLoader);
             Class<?> serviceClass = classLoader.loadClass(cls);
