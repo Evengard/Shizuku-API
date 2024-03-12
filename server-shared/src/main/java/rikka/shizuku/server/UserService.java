@@ -3,6 +3,8 @@ package rikka.shizuku.server;
 import android.app.ActivityThread;
 import android.content.Context;
 import android.content.ContextHidden;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.ddm.DdmHandleAppName;
 import android.os.Build;
 import android.os.IBinder;
@@ -14,6 +16,7 @@ import android.util.Pair;
 import androidx.annotation.Nullable;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 
 import dev.rikka.tools.refine.Refine;
 
@@ -65,7 +68,12 @@ public class UserService {
                             : new UserHandleHidden(userId));
             Context context = Refine.<ContextHidden>unsafeCast(systemContext).createPackageContextAsUser(pkg, Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY, userHandle);
             ClassLoader classLoader = context.getClassLoader();
-            Thread.currentThread().setContextClassLoader(classLoader);
+
+            PackageInfo pi = context.getPackageManager().getPackageInfo(pkg, PackageManager.MATCH_DIRECT_BOOT_AUTO);
+            if (pi == null || (pi.sharedUserId == null && pkg.equals(pi.applicationInfo.processName))) {
+                Thread.currentThread().setContextClassLoader(classLoader);
+            }
+            
             Class<?> serviceClass = classLoader.loadClass(cls);
             Constructor<?> constructorWithContext = null;
             try {
