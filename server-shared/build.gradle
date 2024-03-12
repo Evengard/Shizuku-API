@@ -29,6 +29,7 @@ dependencies {
 
     api project(':aidl')
     api project(':shared')
+    compileOnly project(':shared-stub')
     api project(':rish')
 
     implementation libs.refine.runtime

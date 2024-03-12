@@ -28,6 +28,6 @@ dependencyResolutionManagement {
     }
 }
 
-include ':aidl', ':shared', ':api', ':provider', ':rish'
+include ':aidl', ':shared', ':shared-stub', ':api', ':provider', ':rish'
 include ':demo', ':demo-hidden-api-stub'
 include ':server-shared'
